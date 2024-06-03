@@ -7,6 +7,7 @@
 import sys 
 import os
 import platform
+import math
 
 import tkinter as tk
 from tkinter import Menu, FALSE
@@ -32,7 +33,7 @@ class Calculadora(object):
         4 | 5 | 6 | -
         1 | 2 | 3 | +
         . | 0 | = | /
-          |   | ^ | √
+       log| % | ^ | √
 
         OBS: É necessário importar o modulo style contido na pacote view,
              e selecionar uma de suas classes de estilo.
@@ -157,6 +158,8 @@ class Calculadora(object):
         self._BTN_MULT = tk.Button(master, text='*', cnf=self.theme['BTN_OPERADOR'])
         self._BTN_EXP = tk.Button(master, text='^', cnf=self.theme['BTN_OPERADOR'])
         self._BTN_RAIZ = tk.Button(master, text='√', cnf=self.theme['BTN_OPERADOR'])
+        self._BTN_LOG = tk.Button(master, text='log', cnf=self.theme['BTN_OPERADOR'])
+        self._BTN_PERCENT = tk.Button(master, text='%', cnf=self.theme['BTN_OPERADOR'])
 
         # Seta configurações globais (width, height font etc) no botão especificado.
         self.theme['BTN_DEFAULT'].update(self.settings['global'])
@@ -168,11 +171,7 @@ class Calculadora(object):
         self._BTN_CLEAR = tk.Button(master, text='C', cnf=self.theme['BTN_DEFAULT'])
         self._BTN_DEL = tk.Button(master, text='<', cnf=self.theme['BTN_CLEAR'])
         self._BTN_RESULT = tk.Button(master, text='=', cnf=self.theme['BTN_OPERADOR'])
-        self._BTN_DOT = tk.Button(master, text='.', cnf=self.theme['BTN_DEFAULT'])
-
-        # Instânciação dos botões vazios, para futura implementação
-        self._BTN_VAZIO1 = tk.Button(master, text='', cnf=self.theme['BTN_OPERADOR'])
-        self._BTN_VAZIO2 = tk.Button(master, text='', cnf=self.theme['BTN_OPERADOR'])
+        self._BTN_DOT = tk.Button(master, text='.', cnf=self.theme['BTN_DEFAULT'])        
 
         # Distribuição dos botões em um gerenciador de layout grid
         # Linha 0
@@ -206,8 +205,8 @@ class Calculadora(object):
         self._BTN_DIV.grid(row=4, column=3, padx=1, pady=1)
 
         # Linha 5
-        self._BTN_VAZIO1.grid(row=5, column=0, padx=1, pady=1)
-        self._BTN_VAZIO2.grid(row=5, column=1, padx=1, pady=1)
+        self._BTN_LOG.grid(row=5, column=0, padx=1, pady=1)
+        self._BTN_PERCENT.grid(row=5, column=1, padx=1, pady=1)
         self._BTN_EXP.grid(row=5, column=2, padx=1, pady=1)
         self._BTN_RAIZ.grid(row=5, column=3, padx=1, pady=1)
 
@@ -230,7 +229,8 @@ class Calculadora(object):
         self._BTN_DIV['command'] = partial(self._set_operator_in_input, '/')
         self._BTN_EXP['command'] = partial(self._set_operator_in_input, '**')
         self._BTN_RAIZ['command'] = partial(self._set_operator_in_input, '**(1/2)')
-
+        self._BTN_LOG['command'] = partial(self._set_operator_in_input, 'log(')
+        self._BTN_PERCENT['command'] = partial(self._set_operator_in_input, '%')
 
         # Eventos dos botões de funcionalidades da calculadora
         self._BTN_DOT['command'] = partial(self._set_dot_in_input, '.')
@@ -300,6 +300,17 @@ class Calculadora(object):
         """Metódo responsável por captar o operador matemático clicado e setar no input"""
         if self._entrada.get() == 'Erro':
             return
+        
+        if operator == 'log(':
+        # substitua a entrada padrão '0' por 'log('
+            if self._entrada.get() == '0':
+                self._entrada.delete(0, tk.END)  
+                self._entrada.insert(0, 'log(')
+            else:
+                last_char = self._entrada.get()[-1] if self._entrada.get() else ''
+                if last_char in '+-/*)':
+                    self._entrada.insert(len(self._entrada.get()), operator)
+            return 
 
         if self._entrada.get() == '':
             # print('\33[91mOperação inválida.\33[m')
@@ -307,15 +318,45 @@ class Calculadora(object):
         # Evita casos de operadores repetidos sequêncialmente, para evitar erros
         if self._entrada.get()[-1] not in '+-*/' and self._lenght_max(self._entrada.get()):
             self._entrada.insert(len(self._entrada.get()) ,operator)
-            
+
     def _get_data_in_input(self):
         """Pega os dados com todas as operações contidos dentro do input
         para realizar o calculo"""
         if self._entrada.get() == 'Erro':
             return
+        
+        expressao = self._entrada.get()
 
-        result = self.calc.calculation(self._entrada.get())
-        self._set_result_in_input(result=result)
+        if "log(" in expressao:
+            # Encontre o índice da primeira ocorrência de "log("
+            log_index = expressao.find("log(")
+            closing_index = expressao.find(")", log_index)
+            if closing_index != -1:
+                # Extraia o argumento da função logaritmo
+                value_str = expressao[log_index + 4 : closing_index]
+                try:
+                    # Avalie o argumento do logaritmo e calcule o resultado
+                    value = float(value_str)
+                    log_result = math.log10(value)
+                    # Substitua a expressão logarítmica pelo seu resultado na expressão
+                    expressao = (
+                        expressao[:log_index] +
+                        str(log_result) +
+                        expressao[closing_index + 1:]
+                    )
+                except (ValueError, ZeroDivisionError):
+                    # Lidar com argumentos de logaritmo inválidos
+                    self._set_result_in_input("Error")
+
+        self._process_expression(expressao)
+
+    def _process_expression(self, expression):
+        """Processe a expressão contendo operações diferentes do logaritmo"""
+        try:
+            result = eval(expression)
+            self._set_result_in_input(result=result)
+        except (NameError, ZeroDivisionError, SyntaxError, ValueError):
+            self._set_result_in_input("Error")
 
     def _set_result_in_input(self, result=0):
         """Seta o resultado de toda a operação dentro do input"""
