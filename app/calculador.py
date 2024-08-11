@@ -4,17 +4,18 @@
 # @github: github.com/matheusfelipeog
 
 class Calculador(object):
-    """Classe responsável por realizar todos os calculos da calculadora"""
+    """Classe responsável por realizar todos os cálculos da calculadora."""
     
     def calculation(self, calc):
-        """Responsável por receber o calculo a ser realizado, retornando
-        o resultado ou uma mensagem de erro em caso de falha.
-
+        """
+            Responsável por receber o cálculo a ser realizado, retornando o resultado, ou uma mensagem de erro em caso de falha.
         """
         return self.__calculation_validation(calc=calc)
 
     def __calculation_validation(self, calc):
-        """Responsável por verificar se o calculo informado é possível ser feito"""
+        """
+            Responsável por verificar se o cálculo informado é possível ser feito. Caso contrário, retorna a mensagem de 'Erro' para o usuário.
+        """
 
         try:
             result = eval(calc)
@@ -24,8 +25,9 @@ class Calculador(object):
             return 'Erro' 
 
     def __format_result(self, result):
-        """Formata o resultado em notação cientifica caso seja muito grande
-        e retorna o valor formatado em tipo string"""
+        """
+            Como os resultados podem ser muito grandes, esta função formata o resultado em notação cientifica, e retorna o valor formatado em tipo string.
+        """
 
         result = str(result)
         if len(result) > 15:
