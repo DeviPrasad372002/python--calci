@@ -153,11 +153,7 @@ class Calculadora(object):
         # Instânciação dos botões dos operadores númericos
         self._BTN_SOMA = tk.Button(master, text='+', cnf=self.theme['BTN_OPERADOR'])
         self._BTN_SUB = tk.Button(master, text='-', cnf=self.theme['BTN_OPERADOR'])
-        self._BTN_DIV = tk.Button(master, text='/', cnf=self.theme['BTN_OPERADOR'])
-        self._BTN_MULT = tk.Button(master, text='*', cnf=self.theme['BTN_OPERADOR'])
-        self._BTN_EXP = tk.Button(master, text='^', cnf=self.theme['BTN_OPERADOR'])
-        self._BTN_RAIZ = tk.Button(master, text='√', cnf=self.theme['BTN_OPERADOR'])
-
+        
         # Seta configurações globais (width, height font etc) no botão especificado.
         self.theme['BTN_DEFAULT'].update(self.settings['global'])
         self.theme['BTN_CLEAR'].update(self.settings['global'])
