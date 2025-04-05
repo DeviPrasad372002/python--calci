@@ -71,9 +71,11 @@ class Calculadora(object):
         self._create_menu(self.master)
 
     @staticmethod
+
     def _load_settings():
+        settings_path = os.path.join(os.path.dirname(__file__), 'settings/settings.json')
         """Utilitário para carregar o arquivo de confirgurações da calculadora."""
-        with open('./app/settings/settings.json', mode='r', encoding='utf-8') as f:
+        with open(settings_path, mode='r', encoding='utf-8') as f:
             settings = json_load(f)
         
         return settings
