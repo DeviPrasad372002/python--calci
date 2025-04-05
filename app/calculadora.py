@@ -38,6 +38,7 @@ class Calculadora(object):
              e selecionar uma de suas classes de estilo.
     """
 
+
     def __init__(self, master):
         self.master = master
         self.calc = Calculador()
@@ -71,9 +72,11 @@ class Calculadora(object):
         self._create_menu(self.master)
 
     @staticmethod
+
     def _load_settings():
+        settings_path = os.path.join(os.path.dirname(__file__), 'settings/settings.json')
         """Utilitário para carregar o arquivo de confirgurações da calculadora."""
-        with open('./app/settings/settings.json', mode='r', encoding='utf-8') as f:
+        with open(settings_path, mode='r', encoding='utf-8') as f:
             settings = json_load(f)
         
         return settings
@@ -122,8 +125,8 @@ class Calculadora(object):
 
     def _change_theme_to(self, name='Dark'):
         self.settings['current_theme'] = name
-
-        with open('./app/settings/settings.json', 'w') as outfile:
+        settings_path = os.path.join(os.path.dirname(__file__), 'settings/settings.json')
+        with open(settings_path, 'w') as outfile:
             json_dump(self.settings, outfile, indent=4)
 
         self._realod_app()
