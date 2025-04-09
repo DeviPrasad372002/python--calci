@@ -70,6 +70,8 @@ class Calculadora(object):
         self._create_buttons(self._frame_buttons)
         self._create_menu(self.master)
 
+        # Flag para saber se o último valor mostrado foi resultado
+        self.result_displayed = False
     @staticmethod
     def _load_settings():
         """Utilitário para carregar o arquivo de confirgurações da calculadora."""
@@ -241,16 +243,20 @@ class Calculadora(object):
         self._BTN_RESULT['command'] = self._get_data_in_input
 
     def _set_values_in_input(self, value):
-        """Metódo responsável por captar o valor númerico clicado e setar no input"""
+        """Método responsável por captar o valor numérico clicado e setar no input"""
         if self._entrada.get() == 'Erro':
             self._entrada.delete(0, len(self._entrada.get()))
 
+        if self.result_displayed:
+            self._entrada.delete(0, len(self._entrada.get()))
+            self.result_displayed = False
+
         if self._entrada.get() == '0':
             self._entrada.delete(0)
-            self._entrada.insert(0 ,value)
+            self._entrada.insert(0, value)
         elif self._lenght_max(self._entrada.get()):
-            self._entrada.insert(len(self._entrada.get()) ,value)
-    
+            self._entrada.insert(len(self._entrada.get()), value)
+
     def _set_dot_in_input(self, dot):
         """Metódo responsável por setar o ponto de separação decimal no valor"""
         if self._entrada.get() == 'Erro':
@@ -324,6 +330,7 @@ class Calculadora(object):
 
         self._entrada.delete(0, len(self._entrada.get()))
         self._entrada.insert(0, result)
+        self.result_displayed = True  # Próxima entrada deve limpar
 
     def _lenght_max(self, data_in_input):
         """Para verificar se o input atingiu a quantidade de caracteres máxima"""
