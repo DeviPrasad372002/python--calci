@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# @autor: Matheus Felipe
+# @autor: Matheus Felipe (Original) + History Feature Extension
 # @github: github.com/matheusfelipeog
 
 # Builtins
@@ -19,6 +19,8 @@ from copy import deepcopy
 
 # Módulos próprios
 from .calculador import Calculador
+from .history_manager import HistoryManager
+from .history_window import HistoryWindow
 
 
 class Calculadora(object):
@@ -36,11 +38,16 @@ class Calculadora(object):
 
         OBS: É necessário importar o modulo style contido na pacote view,
              e selecionar uma de suas classes de estilo.
+             
+        Nova funcionalidade: Histórico de cálculos com interface gráfica.
     """
 
     def __init__(self, master):
         self.master = master
         self.calc = Calculador()
+        
+        # 初始化历史记录管理器
+        self.history_manager = HistoryManager()
 
         self.settings = self._load_settings()
         
@@ -69,6 +76,9 @@ class Calculadora(object):
         self._create_input(self._frame_input)
         self._create_buttons(self._frame_buttons)
         self._create_menu(self.master)
+        
+        # 存储上一次的计算表达式，用于历史记录
+        self._last_expression = ""
 
     @staticmethod
     def _load_settings():
@@ -113,6 +123,13 @@ class Calculadora(object):
                 continue
             else:
                 theme.add_command(label=name, command=partial(self._change_theme_to, name))
+        
+        # 添加历史记录菜单
+        history_menu = Menu(calc_menu)
+        calc_menu.add_cascade(label='历史记录', menu=history_menu)
+        history_menu.add_command(label='查看历史记录', command=self._show_history_window)
+        history_menu.add_command(label='清空历史记录', command=self._clear_history_confirm)
+        
         #Configuração
         calc_menu.add_cascade(label='Configuração', menu=config)
         config.add_cascade(label='Tema', menu=theme)
@@ -127,6 +144,32 @@ class Calculadora(object):
             json_dump(self.settings, outfile, indent=4)
 
         self._realod_app()
+    
+    def _show_history_window(self):
+        """显示历史记录窗口"""
+        try:
+            HistoryWindow(
+                parent=self.master,
+                history_manager=self.history_manager,
+                theme=self.theme,
+                on_use_calculation=self._use_calculation_from_history
+            )
+        except Exception as e:
+            print(f"打开历史记录窗口时出错: {e}")
+    
+    def _clear_history_confirm(self):
+        """确认清空历史记录"""
+        from tkinter import messagebox
+        if messagebox.askyesno("确认清空", "确定要清空所有历史记录吗？此操作不可撤销！"):
+            self.history_manager.clear_history()
+            messagebox.showinfo("成功", "历史记录已清空")
+    
+    def _use_calculation_from_history(self, expression: str, result: str):
+        """从历史记录中使用计算"""
+        # 可以选择显示表达式或结果
+        self._entrada.delete(0, len(self._entrada.get()))
+        self._entrada.insert(0, expression)  # 显示表达式，用户可以继续编辑
+        # 或者显示结果: self._entrada.insert(0, result)
         
     def _create_buttons(self, master):
         """"Metódo responsável pela criação de todos os botões da calculadora,
@@ -169,9 +212,11 @@ class Calculadora(object):
         self._BTN_DEL = tk.Button(master, text='<', cnf=self.theme['BTN_CLEAR'])
         self._BTN_RESULT = tk.Button(master, text='=', cnf=self.theme['BTN_OPERADOR'])
         self._BTN_DOT = tk.Button(master, text='.', cnf=self.theme['BTN_DEFAULT'])
+        
+        # 添加历史记录按钮 - 替换一个空按钮
+        self._BTN_HISTORY = tk.Button(master, text='H', cnf=self.theme['BTN_DEFAULT'])
 
         # Instânciação dos botões vazios, para futura implementação
-        self._BTN_VAZIO1 = tk.Button(master, text='', cnf=self.theme['BTN_OPERADOR'])
         self._BTN_VAZIO2 = tk.Button(master, text='', cnf=self.theme['BTN_OPERADOR'])
 
         # Distribuição dos botões em um gerenciador de layout grid
@@ -205,8 +250,8 @@ class Calculadora(object):
         self._BTN_RESULT.grid(row=4, column=2, padx=1, pady=1)
         self._BTN_DIV.grid(row=4, column=3, padx=1, pady=1)
 
-        # Linha 5
-        self._BTN_VAZIO1.grid(row=5, column=0, padx=1, pady=1)
+        # Linha 5 - 历史记录按钮替换第一个空按钮
+        self._BTN_HISTORY.grid(row=5, column=0, padx=1, pady=1)
         self._BTN_VAZIO2.grid(row=5, column=1, padx=1, pady=1)
         self._BTN_EXP.grid(row=5, column=2, padx=1, pady=1)
         self._BTN_RAIZ.grid(row=5, column=3, padx=1, pady=1)
@@ -231,7 +276,6 @@ class Calculadora(object):
         self._BTN_EXP['command'] = partial(self._set_operator_in_input, '**')
         self._BTN_RAIZ['command'] = partial(self._set_operator_in_input, '**(1/2)')
 
-
         # Eventos dos botões de funcionalidades da calculadora
         self._BTN_DOT['command'] = partial(self._set_dot_in_input, '.')
         self._BTN_ABRE_PARENTESE['command'] = self._set_open_parent
@@ -239,6 +283,9 @@ class Calculadora(object):
         self._BTN_DEL['command'] = self._del_last_value_in_input
         self._BTN_CLEAR['command'] = self._clear_input
         self._BTN_RESULT['command'] = self._get_data_in_input
+        
+        # 历史记录按钮事件
+        self._BTN_HISTORY['command'] = self._show_history_window
 
     def _set_values_in_input(self, value):
         """Metódo responsável por captar o valor númerico clicado e setar no input"""
@@ -302,7 +349,6 @@ class Calculadora(object):
             return
 
         if self._entrada.get() == '':
-            # print('\33[91mOperação inválida.\33[m')
             return
         # Evita casos de operadores repetidos sequêncialmente, para evitar erros
         if self._entrada.get()[-1] not in '+-*/' and self._lenght_max(self._entrada.get()):
@@ -310,12 +356,20 @@ class Calculadora(object):
             
     def _get_data_in_input(self):
         """Pega os dados com todas as operações contidos dentro do input
-        para realizar o calculo"""
+        para realizar o calculo e adiciona ao histórico"""
         if self._entrada.get() == 'Erro':
             return
 
-        result = self.calc.calculation(self._entrada.get())
+        # 保存计算表达式
+        expression = self._entrada.get()
+        self._last_expression = expression
+        
+        result = self.calc.calculation(expression)
         self._set_result_in_input(result=result)
+        
+        # 添加到历史记录
+        if result != 'Erro' and expression:
+            self.history_manager.add_calculation(expression, result)
 
     def _set_result_in_input(self, result=0):
         """Seta o resultado de toda a operação dentro do input"""
@@ -333,6 +387,7 @@ class Calculadora(object):
             
     def start(self):
         print('\33[92mCalculadora Tk Iniciada. . .\33[m\n')
+        print('\33[94m历史记录功能已启用 - 按 H 键或使用菜单查看历史记录\33[m\n')
         self.master.mainloop()
     
     def _realod_app(self):
