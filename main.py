@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-# @autor: Matheus Felipe
+# @author: Matheus Felipe
 # @github: github.com/matheusfelipeog
 
 # Builtin
 import tkinter as tk
 
-# Módulo próprio
+# Own module
 from app.calculadora import Calculadora
 
 if __name__ == '__main__':
