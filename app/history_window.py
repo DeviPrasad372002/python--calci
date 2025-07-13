@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# @autor: History Feature Extension
-# 历史记录窗口界面
+# @author: History Feature Extension
+# History window interface
 
 import tkinter as tk
 from tkinter import ttk, messagebox, StringVar
@@ -9,7 +9,7 @@ from functools import partial
 from typing import Callable, List, Dict, Any
 
 class HistoryWindow:
-    """历史记录窗口类，提供历史记录的GUI界面"""
+    """History window class, provides GUI interface for history records"""
     
     def __init__(self, parent, history_manager, theme: Dict, on_use_calculation: Callable):
         self.parent = parent
@@ -17,64 +17,64 @@ class HistoryWindow:
         self.theme = theme
         self.on_use_calculation = on_use_calculation
         
-        # 创建窗口
+        # Create window
         self.window = tk.Toplevel(parent)
         self.setup_window()
         
-        # 搜索变量
+        # Search variable
         self.search_var = StringVar()
         self.search_var.trace('w', self._on_search_change)
         
-        # 当前显示的历史记录
+        # Currently displayed history
         self.current_history = []
         
         self._create_interface()
         self._load_history()
     
     def setup_window(self):
-        """设置窗口属性"""
-        self.window.title('计算历史记录')
+        """Set window properties"""
+        self.window.title('Calculation History')
         self.window.geometry('600x500')
         self.window.minsize(500, 400)
         self.window.configure(bg=self.theme.get('master_bg', '#252729'))
         
-        # 设置窗口图标和属性
+        # Set window icon and properties
         self.window.transient(self.parent)
-        self.window.grab_set()  # 模态窗口
+        self.window.grab_set()  # Modal window
         
-        # 居中显示
+        # Center display
         self.window.update_idletasks()
         x = (self.window.winfo_screenwidth() // 2) - (600 // 2)
         y = (self.window.winfo_screenheight() // 2) - (500 // 2)
         self.window.geometry(f'600x500+{x}+{y}')
     
     def _create_interface(self):
-        """创建界面元素"""
-        # 主框架
+        """Create interface elements"""
+        # Main frame
         main_frame = tk.Frame(self.window, bg=self.theme.get('frame_bg', '#252729'))
         main_frame.pack(fill='both', expand=True, padx=10, pady=10)
         
-        # 顶部框架 - 标题和搜索
+        # Top frame - title and search
         top_frame = tk.Frame(main_frame, bg=self.theme.get('frame_bg', '#252729'))
         top_frame.pack(fill='x', pady=(0, 10))
         
-        # 标题
+        # Title
         title_label = tk.Label(
             top_frame,
-            text='计算历史记录',
+            text='Calculation History',
             font=('Arial', 16, 'bold'),
             bg=self.theme.get('frame_bg', '#252729'),
             fg=self.theme.get('INPUT', {}).get('fg', '#ffffff')
         )
         title_label.pack(side='left')
         
-        # 搜索框架
+        # Search frame
         search_frame = tk.Frame(top_frame, bg=self.theme.get('frame_bg', '#252729'))
         search_frame.pack(side='right')
         
         tk.Label(
             search_frame,
-            text='搜索:',
+            text='Search:',
             bg=self.theme.get('frame_bg', '#252729'),
             fg=self.theme.get('INPUT', {}).get('fg', '#ffffff')
         ).pack(side='left', padx=(0, 5))
@@ -89,15 +89,15 @@ class HistoryWindow:
         )
         self.search_entry.pack(side='left')
         
-        # 中间框架 - 历史记录列表
+        # Middle frame - history list
         middle_frame = tk.Frame(main_frame, bg=self.theme.get('frame_bg', '#252729'))
         middle_frame.pack(fill='both', expand=True, pady=(0, 10))
         
-        # 创建Treeview来显示历史记录
+        # Create Treeview to display history
         style = ttk.Style()
         style.theme_use('clam')
         
-        # 配置Treeview样式
+        # Configure Treeview style
         style.configure(
             'History.Treeview',
             background=self.theme.get('BTN_NUMERICO', {}).get('bg', '#050505'),
@@ -113,7 +113,7 @@ class HistoryWindow:
             relief='flat'
         )
         
-        # 创建Treeview
+        # Create Treeview
         columns = ('expression', 'result', 'time')
         self.tree = ttk.Treeview(
             middle_frame,
@@ -122,21 +122,21 @@ class HistoryWindow:
             style='History.Treeview'
         )
         
-        # 定义列
-        self.tree.heading('expression', text='表达式')
-        self.tree.heading('result', text='结果')
-        self.tree.heading('time', text='时间')
+        # Define columns
+        self.tree.heading('expression', text='Expression')
+        self.tree.heading('result', text='Result')
+        self.tree.heading('time', text='Time')
         
         self.tree.column('expression', width=200, anchor='w')
         self.tree.column('result', width=150, anchor='e')
         self.tree.column('time', width=180, anchor='center')
         
-        # 添加滚动条
+        # Add scrollbars
         scrollbar_y = ttk.Scrollbar(middle_frame, orient='vertical', command=self.tree.yview)
         scrollbar_x = ttk.Scrollbar(middle_frame, orient='horizontal', command=self.tree.xview)
         self.tree.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
         
-        # 布局
+        # Layout
         self.tree.grid(row=0, column=0, sticky='nsew')
         scrollbar_y.grid(row=0, column=1, sticky='ns')
         scrollbar_x.grid(row=1, column=0, sticky='ew')
@@ -144,15 +144,15 @@ class HistoryWindow:
         middle_frame.grid_rowconfigure(0, weight=1)
         middle_frame.grid_columnconfigure(0, weight=1)
         
-        # 绑定双击事件
+        # Bind double-click event
         self.tree.bind('<Double-1>', self._on_item_double_click)
-        self.tree.bind('<Button-3>', self._on_right_click)  # 右键菜单
+        self.tree.bind('<Button-3>', self._on_right_click)  # Right-click menu
         
-        # 底部框架 - 按钮
+        # Bottom frame - buttons
         bottom_frame = tk.Frame(main_frame, bg=self.theme.get('frame_bg', '#252729'))
         bottom_frame.pack(fill='x')
         
-        # 统计信息
+        # Statistics information
         self.stats_label = tk.Label(
             bottom_frame,
             text='',
@@ -162,11 +162,11 @@ class HistoryWindow:
         )
         self.stats_label.pack(side='left')
         
-        # 按钮框架
+        # Button frame
         button_frame = tk.Frame(bottom_frame, bg=self.theme.get('frame_bg', '#252729'))
         button_frame.pack(side='right')
         
-        # 按钮配置
+        # Button configuration
         btn_config = {
             'width': 10,
             'height': 1,
@@ -178,68 +178,68 @@ class HistoryWindow:
             'border': 0
         }
         
-        # 使用按钮
+        # Use button
         self.use_btn = tk.Button(
             button_frame,
-            text='使用',
+            text='Use',
             command=self._use_selected,
             **btn_config
         )
         self.use_btn.pack(side='left', padx=(0, 5))
         
-        # 删除按钮
+        # Delete button
         self.delete_btn = tk.Button(
             button_frame,
-            text='删除',
+            text='Delete',
             command=self._delete_selected,
             **btn_config
         )
         self.delete_btn.pack(side='left', padx=(0, 5))
         
-        # 清空按钮
+        # Clear button
         self.clear_btn = tk.Button(
             button_frame,
-            text='清空全部',
+            text='Clear All',
             command=self._clear_all,
             **btn_config
         )
         self.clear_btn.pack(side='left', padx=(0, 5))
         
-        # 关闭按钮
+        # Close button
         self.close_btn = tk.Button(
             button_frame,
-            text='关闭',
+            text='Close',
             command=self.window.destroy,
             **btn_config
         )
         self.close_btn.pack(side='left')
         
-        # 创建右键菜单
+        # Create right-click menu
         self._create_context_menu()
     
     def _create_context_menu(self):
-        """创建右键上下文菜单"""
+        """Create right-click context menu"""
         self.context_menu = tk.Menu(self.window, tearoff=0)
-        self.context_menu.add_command(label="使用此计算", command=self._use_selected)
-        self.context_menu.add_command(label="复制表达式", command=self._copy_expression)
-        self.context_menu.add_command(label="复制结果", command=self._copy_result)
+        self.context_menu.add_command(label="Use this calculation", command=self._use_selected)
+        self.context_menu.add_command(label="Copy expression", command=self._copy_expression)
+        self.context_menu.add_command(label="Copy result", command=self._copy_result)
         self.context_menu.add_separator()
-        self.context_menu.add_command(label="删除", command=self._delete_selected)
+        self.context_menu.add_command(label="Delete", command=self._delete_selected)
     
     def _load_history(self):
-        """加载并显示历史记录"""
+        """Load and display history"""
         history = self.history_manager.get_history()
         self.current_history = history
         self._update_tree_view(history)
         self._update_statistics()
     
     def _update_tree_view(self, history_list: List[Dict]):
-        """更新树形视图"""
-        # 清空现有项目
+        """Update tree view"""
+        # Clear existing items
         for item in self.tree.get_children():
             self.tree.delete(item)
         
-        # 添加历史记录
+        # Add history records
         for calc in history_list:
             self.tree.insert('', 'end', values=(
                 calc['expression'],
@@ -248,19 +248,19 @@ class HistoryWindow:
             ), tags=(str(calc['id']),))
     
     def _update_statistics(self):
-        """更新统计信息"""
+        """Update statistics information"""
         stats = self.history_manager.get_statistics()
         if stats['total_calculations'] > 0:
-            text = f"总计算数: {stats['total_calculations']}"
+            text = f"Total calculations: {stats['total_calculations']}"
             if len(self.current_history) != stats['total_calculations']:
-                text += f" (显示: {len(self.current_history)})"
+                text += f" (Showing: {len(self.current_history)})"
         else:
-            text = "暂无计算记录"
+            text = "No calculation records"
         
         self.stats_label.config(text=text)
     
     def _on_search_change(self, *args):
-        """搜索框内容变化时的回调"""
+        """Callback when search box content changes"""
         query = self.search_var.get()
         filtered_history = self.history_manager.search_history(query)
         self.current_history = filtered_history
@@ -268,18 +268,18 @@ class HistoryWindow:
         self._update_statistics()
     
     def _on_item_double_click(self, event):
-        """双击项目时使用该计算"""
+        """Use calculation when item is double-clicked"""
         self._use_selected()
     
     def _on_right_click(self, event):
-        """右键点击显示上下文菜单"""
+        """Show context menu on right-click"""
         item = self.tree.identify_row(event.y)
         if item:
             self.tree.selection_set(item)
             self.context_menu.post(event.x_root, event.y_root)
     
     def _get_selected_calculation(self) -> Dict:
-        """获取选中的计算记录"""
+        """Get selected calculation record"""
         selection = self.tree.selection()
         if not selection:
             return None
@@ -296,50 +296,50 @@ class HistoryWindow:
         return None
     
     def _use_selected(self):
-        """使用选中的计算"""
+        """Use selected calculation"""
         calc = self._get_selected_calculation()
         if calc:
             self.on_use_calculation(calc['expression'], calc['result'])
             self.window.destroy()
         else:
-            messagebox.showwarning("警告", "请先选择一个计算记录")
+            messagebox.showwarning("Warning", "Please select a calculation record first")
     
     def _delete_selected(self):
-        """删除选中的计算"""
+        """Delete selected calculation"""
         calc = self._get_selected_calculation()
         if calc:
-            if messagebox.askyesno("确认删除", f"确定要删除计算 '{calc['expression']} = {calc['result']}' 吗？"):
+            if messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete calculation '{calc['expression']} = {calc['result']}'?"):
                 if self.history_manager.delete_calculation(calc['id']):
                     self._load_history()
-                    messagebox.showinfo("成功", "计算记录已删除")
+                    messagebox.showinfo("Success", "Calculation record deleted")
                 else:
-                    messagebox.showerror("错误", "删除失败")
+                    messagebox.showerror("Error", "Delete failed")
         else:
-            messagebox.showwarning("警告", "请先选择一个计算记录")
+            messagebox.showwarning("Warning", "Please select a calculation record first")
     
     def _clear_all(self):
-        """清空所有历史记录"""
-        if messagebox.askyesno("确认清空", "确定要清空所有历史记录吗？此操作不可撤销！"):
+        """Clear all history records"""
+        if messagebox.askyesno("Confirm Clear", "Are you sure you want to clear all history? This action cannot be undone!"):
             self.history_manager.clear_history()
             self._load_history()
-            messagebox.showinfo("成功", "所有历史记录已清空")
+            messagebox.showinfo("Success", "All history records have been cleared")
     
     def _copy_expression(self):
-        """复制表达式到剪贴板"""
+        """Copy expression to clipboard"""
         calc = self._get_selected_calculation()
         if calc:
             self.window.clipboard_clear()
             self.window.clipboard_append(calc['expression'])
-            messagebox.showinfo("成功", "表达式已复制到剪贴板")
+            messagebox.showinfo("Success", "Expression copied to clipboard")
         else:
-            messagebox.showwarning("警告", "请先选择一个计算记录")
+            messagebox.showwarning("Warning", "Please select a calculation record first")
     
     def _copy_result(self):
-        """复制结果到剪贴板"""
+        """Copy result to clipboard"""
         calc = self._get_selected_calculation()
         if calc:
             self.window.clipboard_clear()
             self.window.clipboard_append(calc['result'])
-            messagebox.showinfo("成功", "结果已复制到剪贴板")
+            messagebox.showinfo("Success", "Result copied to clipboard")
         else:
-            messagebox.showwarning("警告", "请先选择一个计算记录")
+            messagebox.showwarning("Warning", "Please select a calculation record first")

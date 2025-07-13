@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# @autor: Matheus Felipe (Original) + History Feature Extension
+# @author: Matheus Felipe (Original) + History Feature Extension
 # @github: github.com/matheusfelipeog
 
 # Builtins
@@ -17,17 +17,17 @@ from json import dump as json_dump
 
 from copy import deepcopy
 
-# Módulos próprios
+# Own modules
 from .calculador import Calculador
 from .history_manager import HistoryManager
 from .history_window import HistoryWindow
 
 
 class Calculadora(object):
-    """Classe para criação do layout da calculadora, distribuição dos botões
-    e a adição de suas funcionalidades.
+    """Class for creating the calculator layout, distributing buttons
+    and adding their functionalities.
 
-    Os botões distríbuidos no layout estão conforme o exemplo abaixo:
+    The buttons distributed in the layout are as shown in the example below:
 
         C | ( | ) | <
         7 | 8 | 9 | x
@@ -36,68 +36,68 @@ class Calculadora(object):
         . | 0 | = | /
         H |   | ^ | √
 
-        OBS: É necessário importar o modulo style contido na pacote view,
-             e selecionar uma de suas classes de estilo.
+        NOTE: It's necessary to import the style module contained in the view package,
+             and select one of its style classes.
              
-        Nova funcionalidade: Histórico de cálculos com interface gráfica.
-        Melhorias: Cursor visível e suporte ao Enter para calcular.
+        New feature: Calculation history with graphical interface.
+        Improvements: Visible cursor and Enter key support for calculation.
     """
 
     def __init__(self, master):
         self.master = master
         self.calc = Calculador()
         
-        # 初始化历史记录管理器，添加错误处理
+        # Initialize history manager with error handling
         try:
             self.history_manager = HistoryManager()
         except Exception as e:
-            print(f"历史记录初始化失败: {e}")
+            print(f"History initialization failed: {e}")
             self.history_manager = None
 
         self.settings = self._load_settings()
         
-        # Define estilo padrão para macOS, caso seja o sistema operacional utilizado
+        # Define default style for macOS, if it's the operating system being used
         if platform.system() == 'Darwin':
             self.theme = self._get_theme('Default Theme For MacOS')
         else:
             self.theme = self._get_theme(self.settings['current_theme'])
 
-        # Edição da Top-Level
-        self.master.title('Calculadora Tk')
+        # Top-Level editing
+        self.master.title('Calculator Tk')
         self.master.maxsize(width=335, height=415)
         self.master.minsize(width=335, height=415)
         self.master.geometry('-150+100')
         self.master['bg'] = self.theme['master_bg']
 
-        # Área do input
+        # Input area
         self._frame_input = tk.Frame(self.master, bg=self.theme['frame_bg'], pady=4)
         self._frame_input.pack()
 
-        # Área dos botões
+        # Button area
         self._frame_buttons = tk.Frame(self.master, bg=self.theme['frame_bg'], padx=2)
         self._frame_buttons.pack()
 
-        # Funções de inicialização 
+        # Initialization functions 
         self._create_input(self._frame_input)
         self._create_buttons(self._frame_buttons)
         self._create_menu(self.master)
         
-        # 绑定键盘事件
+        # Bind keyboard events
         self._bind_keyboard_events()
         
-        # 存储上一次的计算表达式，用于历史记录
+        # Store the last calculation expression for history
         self._last_expression = ""
 
     @staticmethod
     def _load_settings():
-        """Utilitário para carregar o arquivo de confirgurações da calculadora."""
+        """Utility to load the calculator configuration file."""
         try:
             with open('./app/settings/settings.json', mode='r', encoding='utf-8') as f:
                 settings = json_load(f)
             return settings
         except (FileNotFoundError, ValueError) as e:
-            print(f"配置文件加载失败: {e}")
-            # 返回默认配置
+            print(f"Configuration file loading failed: {e}")
+            # Return default configuration
             return {
                 "current_theme": "Dark",
                 "global": {
@@ -111,7 +111,7 @@ class Calculadora(object):
             }
 
     def _get_theme(self, name='Dark'):
-        """Retorna as configurações de estilo para o theme especificado."""
+        """Returns the style settings for the specified theme."""
         list_of_themes = self.settings.get('themes', [])
 
         found_theme = None
@@ -120,7 +120,7 @@ class Calculadora(object):
                 found_theme = deepcopy(t)
                 break
         
-        # 如果没有找到主题，返回默认主题
+        # If theme not found, return default theme
         if not found_theme:
             found_theme = {
                 "name": "Dark",
@@ -164,45 +164,45 @@ class Calculadora(object):
         return found_theme
         
     def _create_input(self, master):
-        """创建输入框并配置光标显示"""
-        # 创建输入框配置，确保光标可见
+        """Create input field and configure cursor visibility"""
+        # Create input field configuration, ensuring cursor is visible
         input_config = deepcopy(self.theme['INPUT'])
         
-        # 设置光标相关配置
-        input_config['insertbackground'] = input_config.get('fg', '#ffffff')  # 光标颜色与文字颜色一致
-        input_config['insertwidth'] = 2  # 光标宽度
-        input_config['insertborderwidth'] = 0  # 光标边框宽度
-        input_config['insertontime'] = 600  # 光标显示时间(毫秒)
-        input_config['insertofftime'] = 300  # 光标隐藏时间(毫秒)
+        # Set cursor-related configurations
+        input_config['insertbackground'] = input_config.get('fg', '#ffffff')  # Cursor color matches text color
+        input_config['insertwidth'] = 2  # Cursor width
+        input_config['insertborderwidth'] = 0  # Cursor border width
+        input_config['insertontime'] = 600  # Cursor display time (milliseconds)
+        input_config['insertofftime'] = 300  # Cursor hide time (milliseconds)
         
         self._entrada = tk.Entry(master, cnf=input_config)
         self._entrada.insert(0, 0)
         self._entrada.pack()
         
-        # 确保输入框获得焦点以显示光标
+        # Ensure input field gets focus to show cursor
         self._entrada.focus_set()
     
     def _bind_keyboard_events(self):
-        """绑定键盘事件"""
-        # 只绑定到输入框，避免重复触发
+        """Bind keyboard events"""
+        # Only bind to input field to avoid duplicate triggering
         self._entrada.bind('<KeyPress>', self._on_key_press)
         self._entrada.bind('<Return>', self._on_enter_press)
-        self._entrada.bind('<KP_Enter>', self._on_enter_press)  # 数字键盘的Enter
+        self._entrada.bind('<KP_Enter>', self._on_enter_press)  # Numeric keypad Enter
         
-        # 确保输入框获得焦点
+        # Ensure input field gets focus
         self._entrada.focus_set()
     
     def _on_key_press(self, event):
-        """处理键盘按键事件"""
+        """Handle keyboard key press events"""
         key = event.keysym
         char = event.char
         
-        # 处理数字键
+        # Handle number keys
         if char.isdigit():
             self._set_values_in_input(int(char))
-            return 'break'  # 阻止默认行为
+            return 'break'  # Prevent default behavior
         
-        # 处理运算符
+        # Handle operators
         elif char in ['+', '-', '*', '/']:
             if char == '*':
                 self._set_operator_in_input('*')
@@ -210,12 +210,12 @@ class Calculadora(object):
                 self._set_operator_in_input(char)
             return 'break'
         
-        # 处理小数点
+        # Handle decimal point
         elif char == '.':
             self._set_dot_in_input('.')
             return 'break'
         
-        # 处理括号
+        # Handle parentheses
         elif char == '(':
             self._set_open_parent()
             return 'break'
@@ -223,7 +223,7 @@ class Calculadora(object):
             self._set_close_parent()
             return 'break'
         
-        # 处理特殊键
+        # Handle special keys
         elif key == 'BackSpace':
             self._del_last_value_in_input()
             return 'break'
@@ -234,112 +234,112 @@ class Calculadora(object):
             self._clear_input()
             return 'break'
         
-        # 处理Power运算符 (^)
+        # Handle Power operator (^)
         elif char == '^':
             self._set_operator_in_input('**')
             return 'break'
         
-        # 处理等号
+        # Handle equals sign
         elif char == '=':
             self._get_data_in_input()
             return 'break'
         
-        # 处理历史记录快捷键
+        # Handle history shortcut
         elif key.lower() == 'h' and event.state & 0x4:  # Ctrl+H
             if self.history_manager:
                 self._show_history_window()
             return 'break'
         
-        # 对于其他键，允许默认行为但限制只能输入我们支持的字符
+        # For other keys, allow default behavior but restrict to only supported characters
         elif char and not char.isalnum() and char not in '+-*/().^=':
-            return 'break'  # 阻止不支持的字符
+            return 'break'  # Block unsupported characters
         
-        # 允许导航键（左右箭头等）
+        # Allow navigation keys (left/right arrows, etc.)
         elif key in ['Left', 'Right', 'Home', 'End']:
-            return  # 允许默认行为
+            return  # Allow default behavior
         
-        # 其他情况阻止输入
+        # Block input for other cases
         else:
             return 'break'
     
     def _on_enter_press(self, event):
-        """处理Enter键按下事件"""
+        """Handle Enter key press event"""
         self._get_data_in_input()
-        return 'break'  # 阻止默认行为
+        return 'break'  # Prevent default behavior
 
     def _create_menu(self, master):
         self.master.option_add('*tearOff', FALSE)
         calc_menu = Menu(self.master)
         self.master.config(menu=calc_menu)
 
-        #Configuração
+        # Configuration
         config = Menu(calc_menu)
         theme = Menu(config)
-        #Menu tema
+        # Theme menu
         theme_incompatible = ['Default Theme For MacOS']
         for t in self.settings.get('themes', []):
             name = t.get('name', '')
-            if name in theme_incompatible:  # Ignora os temas não compatíveis.
+            if name in theme_incompatible:  # Ignore incompatible themes.
                 continue
             else:
                 theme.add_command(label=name, command=partial(self._change_theme_to, name))
         
-        # 添加历史记录菜单 - 只有在历史管理器可用时才添加
+        # Add history menu - only add when history manager is available
         if self.history_manager:
             history_menu = Menu(calc_menu)
-            calc_menu.add_cascade(label='历史记录', menu=history_menu)
-            history_menu.add_command(label='查看历史记录 (Ctrl+H)', command=self._show_history_window)
-            history_menu.add_command(label='清空历史记录', command=self._clear_history_confirm)
+            calc_menu.add_cascade(label='History', menu=history_menu)
+            history_menu.add_command(label='View History (Ctrl+H)', command=self._show_history_window)
+            history_menu.add_command(label='Clear History', command=self._clear_history_confirm)
         
-        # 添加帮助菜单
+        # Add help menu
         help_menu = Menu(calc_menu)
-        calc_menu.add_cascade(label='帮助', menu=help_menu)
-        help_menu.add_command(label='键盘快捷键', command=self._show_keyboard_shortcuts)
+        calc_menu.add_cascade(label='Help', menu=help_menu)
+        help_menu.add_command(label='Keyboard Shortcuts', command=self._show_keyboard_shortcuts)
         
-        #Configuração
-        calc_menu.add_cascade(label='Configuração', menu=config)
-        config.add_cascade(label='Tema', menu=theme)
+        # Configuration
+        calc_menu.add_cascade(label='Configuration', menu=config)
+        config.add_cascade(label='Theme', menu=theme)
 
         config.add_separator()
-        config.add_command(label='Sair', command=self._exit)
+        config.add_command(label='Exit', command=self._exit)
     
     def _show_keyboard_shortcuts(self):
-        """显示键盘快捷键帮助"""
-        shortcuts_text = """键盘快捷键:
+        """Show keyboard shortcuts help"""
+        shortcuts_text = """Keyboard Shortcuts:
 
-数字键 (0-9): 输入数字
-运算符 (+, -, *, /): 输入运算符
-小数点 (.): 输入小数点
-括号 ((, )): 输入括号
-^ : 乘方运算 (**)
-= 或 Enter: 计算结果
-Backspace: 删除最后一个字符
-Delete 或 C: 清空输入
-Escape: 清空输入
-Ctrl+H: 打开历史记录
-H: 历史记录按钮
+Number keys (0-9): Input numbers
+Operators (+, -, *, /): Input operators
+Decimal point (.): Input decimal point
+Parentheses ((, )): Input parentheses
+^ : Power operation (**)
+= or Enter: Calculate result
+Backspace: Delete last character
+Delete or C: Clear input
+Escape: Clear input
+Ctrl+H: Open history
+H: History button
 
-鼠标操作:
-- 点击按钮进行输入
-- 双击历史记录项目使用该计算
-- 右键点击历史记录查看更多选项"""
+Mouse operations:
+- Click buttons for input
+- Double-click history items to use calculation
+- Right-click history for more options"""
         
-        messagebox.showinfo("键盘快捷键", shortcuts_text)
+        messagebox.showinfo("Keyboard Shortcuts", shortcuts_text)
 
     def _change_theme_to(self, name='Dark'):
-        """修改主题设置并重启应用"""
+        """Change theme settings and restart application"""
         try:
             self.settings['current_theme'] = name
             with open('./app/settings/settings.json', 'w', encoding='utf-8') as outfile:
                 json_dump(self.settings, outfile, indent=4, ensure_ascii=False)
             self._realod_app()
         except Exception as e:
-            messagebox.showerror("错误", f"主题切换失败: {e}")
+            messagebox.showerror("Error", f"Theme change failed: {e}")
     
     def _show_history_window(self):
-        """显示历史记录窗口"""
+        """Show history window"""
         if not self.history_manager:
-            messagebox.showerror("错误", "历史记录功能不可用")
+            messagebox.showerror("Error", "History feature is not available")
             return
             
         try:
@@ -350,42 +350,42 @@ H: 历史记录按钮
                 on_use_calculation=self._use_calculation_from_history
             )
         except Exception as e:
-            print(f"打开历史记录窗口时出错: {e}")
-            messagebox.showerror("错误", f"无法打开历史记录窗口: {e}")
+            print(f"Error opening history window: {e}")
+            messagebox.showerror("Error", f"Unable to open history window: {e}")
     
     def _clear_history_confirm(self):
-        """确认清空历史记录"""
+        """Confirm clearing history"""
         if not self.history_manager:
-            messagebox.showerror("错误", "历史记录功能不可用")
+            messagebox.showerror("Error", "History feature is not available")
             return
             
         try:
-            if messagebox.askyesno("确认清空", "确定要清空所有历史记录吗？此操作不可撤销！"):
+            if messagebox.askyesno("Confirm Clear", "Are you sure you want to clear all history? This action cannot be undone!"):
                 self.history_manager.clear_history()
-                messagebox.showinfo("成功", "历史记录已清空")
+                messagebox.showinfo("Success", "History has been cleared")
         except Exception as e:
-            messagebox.showerror("错误", f"清空历史记录失败: {e}")
+            messagebox.showerror("Error", f"Failed to clear history: {e}")
     
     def _use_calculation_from_history(self, expression: str, result: str):
-        """从历史记录中使用计算"""
+        """Use calculation from history"""
         try:
-            # 清空当前输入
+            # Clear current input
             self._entrada.delete(0, tk.END)
-            # 插入表达式
+            # Insert expression
             self._entrada.insert(0, expression)
-            # 确保光标在末尾
+            # Ensure cursor is at the end
             self._entrada.icursor(tk.END)
-            # 确保输入框获得焦点以显示光标
+            # Ensure input field gets focus to show cursor
             self._entrada.focus_set()
         except Exception as e:
-            print(f"使用历史记录失败: {e}")
+            print(f"Failed to use history: {e}")
         
     def _create_buttons(self, master):
-        """"Metódo responsável pela criação de todos os botões da calculadora,
-        indo desde adição de eventos em cada botão à distribuição no layout grid.
+        """"Method responsible for creating all calculator buttons,
+        from adding events to each button to distribution in grid layout.
         """
 
-        # Seta configurações globais (width, height font etc) no botão especificado.
+        # Set global configurations (width, height font etc) on specified button.
         btn_numerico_config = deepcopy(self.theme.get('BTN_NUMERICO', {}))
         btn_numerico_config.update(self.settings.get('global', {}))
 
@@ -400,11 +400,11 @@ H: 历史记录按钮
         self._BTN_NUM_8 = tk.Button(master, text=8, cnf=btn_numerico_config)
         self._BTN_NUM_9 = tk.Button(master, text=9, cnf=btn_numerico_config)
 
-        # Seta configurações globais (width, height font etc) no botão especificado.
+        # Set global configurations (width, height font etc) on specified button.
         btn_operador_config = deepcopy(self.theme.get('BTN_OPERADOR', {}))
         btn_operador_config.update(self.settings.get('global', {}))
 
-        # Instânciação dos botões dos operadores númericos
+        # Instantiation of numeric operator buttons
         self._BTN_SOMA = tk.Button(master, text='+', cnf=btn_operador_config)
         self._BTN_SUB = tk.Button(master, text='-', cnf=btn_operador_config)
         self._BTN_DIV = tk.Button(master, text='/', cnf=btn_operador_config)
@@ -412,14 +412,14 @@ H: 历史记录按钮
         self._BTN_EXP = tk.Button(master, text='^', cnf=btn_operador_config)
         self._BTN_RAIZ = tk.Button(master, text='√', cnf=btn_operador_config)
 
-        # Seta configurações globais (width, height font etc) no botão especificado.
+        # Set global configurations (width, height font etc) on specified button.
         btn_default_config = deepcopy(self.theme.get('BTN_DEFAULT', {}))
         btn_default_config.update(self.settings.get('global', {}))
         
         btn_clear_config = deepcopy(self.theme.get('BTN_CLEAR', {}))
         btn_clear_config.update(self.settings.get('global', {}))
 
-        # Instânciação dos botões de funcionalidades da calculadora
+        # Instantiation of calculator functionality buttons
         self._BTN_ABRE_PARENTESE = tk.Button(master, text='(', cnf=btn_default_config)
         self._BTN_FECHA_PARENTESE = tk.Button(master, text=')', cnf=btn_default_config)
         self._BTN_CLEAR = tk.Button(master, text='C', cnf=btn_default_config)
@@ -427,56 +427,56 @@ H: 历史记录按钮
         self._BTN_RESULT = tk.Button(master, text='=', cnf=btn_operador_config)
         self._BTN_DOT = tk.Button(master, text='.', cnf=btn_default_config)
         
-        # 添加历史记录按钮 - 只有在历史管理器可用时才启用
+        # Add history button - only enable when history manager is available
         if self.history_manager:
             self._BTN_HISTORY = tk.Button(master, text='H', cnf=btn_default_config)
         else:
-            # 如果历史功能不可用，创建一个禁用的按钮
+            # If history feature is not available, create a disabled button
             disabled_config = deepcopy(btn_default_config)
             disabled_config['state'] = 'disabled'
             self._BTN_HISTORY = tk.Button(master, text='H', cnf=disabled_config)
 
-        # Instânciação dos botões vazios，为未来功能预留
+        # Instantiation of empty buttons, reserved for future features
         self._BTN_VAZIO2 = tk.Button(master, text='', cnf=btn_operador_config, state='disabled')
 
-        # Distribuição dos botões em um gerenciador de layout grid
-        # Linha 0
+        # Distribution of buttons in grid layout manager
+        # Row 0
         self._BTN_CLEAR.grid(row=0, column=0, padx=1, pady=1)
         self._BTN_ABRE_PARENTESE.grid(row=0, column=1, padx=1, pady=1)
         self._BTN_FECHA_PARENTESE.grid(row=0, column=2, padx=1, pady=1)
         self._BTN_DEL.grid(row=0, column=3, padx=1, pady=1)
 
-        # Linha 1
+        # Row 1
         self._BTN_NUM_7.grid(row=1, column=0, padx=1, pady=1)
         self._BTN_NUM_8.grid(row=1, column=1, padx=1, pady=1)
         self._BTN_NUM_9.grid(row=1, column=2, padx=1, pady=1)
         self._BTN_MULT.grid(row=1, column=3, padx=1, pady=1)
 
-        # Linha 2
+        # Row 2
         self._BTN_NUM_4.grid(row=2, column=0, padx=1, pady=1)
         self._BTN_NUM_5.grid(row=2, column=1, padx=1, pady=1)
         self._BTN_NUM_6.grid(row=2, column=2, padx=1, pady=1)
         self._BTN_SUB.grid(row=2, column=3, padx=1, pady=1)
 
-        # Linha 3
+        # Row 3
         self._BTN_NUM_1.grid(row=3, column=0, padx=1, pady=1)
         self._BTN_NUM_2.grid(row=3, column=1, padx=1, pady=1)
         self._BTN_NUM_3.grid(row=3, column=2, padx=1, pady=1)
         self._BTN_SOMA.grid(row=3, column=3, padx=1, pady=1)
 
-        # Linha 4
+        # Row 4
         self._BTN_DOT.grid(row=4, column=0, padx=1, pady=1)
         self._BTN_NUM_0.grid(row=4, column=1, padx=1, pady=1)
         self._BTN_RESULT.grid(row=4, column=2, padx=1, pady=1)
         self._BTN_DIV.grid(row=4, column=3, padx=1, pady=1)
 
-        # Linha 5 - 历史记录按钮替换第一个空按钮
+        # Row 5 - History button replaces first empty button
         self._BTN_HISTORY.grid(row=5, column=0, padx=1, pady=1)
         self._BTN_VAZIO2.grid(row=5, column=1, padx=1, pady=1)
         self._BTN_EXP.grid(row=5, column=2, padx=1, pady=1)
         self._BTN_RAIZ.grid(row=5, column=3, padx=1, pady=1)
 
-        # 为所有按钮绑定点击后重新聚焦到输入框的事件
+        # Bind all buttons to refocus input field after click
         buttons = [
             self._BTN_NUM_0, self._BTN_NUM_1, self._BTN_NUM_2, self._BTN_NUM_3, self._BTN_NUM_4,
             self._BTN_NUM_5, self._BTN_NUM_6, self._BTN_NUM_7, self._BTN_NUM_8, self._BTN_NUM_9,
@@ -488,7 +488,7 @@ H: 历史记录按钮
         if self.history_manager:
             buttons.append(self._BTN_HISTORY)
 
-        # Eventos dos botões númericos
+        # Events for numeric buttons
         self._BTN_NUM_0['command'] = partial(self._button_click_wrapper, partial(self._set_values_in_input, 0))
         self._BTN_NUM_1['command'] = partial(self._button_click_wrapper, partial(self._set_values_in_input, 1))
         self._BTN_NUM_2['command'] = partial(self._button_click_wrapper, partial(self._set_values_in_input, 2))
@@ -500,7 +500,7 @@ H: 历史记录按钮
         self._BTN_NUM_8['command'] = partial(self._button_click_wrapper, partial(self._set_values_in_input, 8))
         self._BTN_NUM_9['command'] = partial(self._button_click_wrapper, partial(self._set_values_in_input, 9))
 
-        # Eventos dos botões de operação matemática
+        # Events for mathematical operation buttons
         self._BTN_SOMA['command'] = partial(self._button_click_wrapper, partial(self._set_operator_in_input, '+'))
         self._BTN_SUB['command'] = partial(self._button_click_wrapper, partial(self._set_operator_in_input, '-'))
         self._BTN_MULT['command'] = partial(self._button_click_wrapper, partial(self._set_operator_in_input, '*'))
@@ -508,7 +508,7 @@ H: 历史记录按钮
         self._BTN_EXP['command'] = partial(self._button_click_wrapper, partial(self._set_operator_in_input, '**'))
         self._BTN_RAIZ['command'] = partial(self._button_click_wrapper, partial(self._set_operator_in_input, '**(1/2)'))
 
-        # Eventos dos botões de funcionalidades da calculadora
+        # Events for calculator functionality buttons
         self._BTN_DOT['command'] = partial(self._button_click_wrapper, partial(self._set_dot_in_input, '.'))
         self._BTN_ABRE_PARENTESE['command'] = partial(self._button_click_wrapper, self._set_open_parent)
         self._BTN_FECHA_PARENTESE['command'] = partial(self._button_click_wrapper, self._set_close_parent)
@@ -516,57 +516,57 @@ H: 历史记录按钮
         self._BTN_CLEAR['command'] = partial(self._button_click_wrapper, self._clear_input)
         self._BTN_RESULT['command'] = partial(self._button_click_wrapper, self._get_data_in_input)
         
-        # 历史记录按钮事件 - 只有在历史管理器可用时才绑定
+        # History button event - only bind when history manager is available
         if self.history_manager:
-            self._BTN_HISTORY['command'] = self._show_history_window  # 历史窗口不需要重新聚焦
+            self._BTN_HISTORY['command'] = self._show_history_window  # History window doesn't need refocus
     
     def _button_click_wrapper(self, func):
-        """按钮点击包装器，确保点击后输入框保持焦点"""
+        """Button click wrapper, ensures input field maintains focus after click"""
         func()
-        # 确保输入框保持焦点和光标可见
+        # Ensure input field maintains focus and cursor is visible
         self._entrada.focus_set()
-        # 将光标移到末尾
+        # Move cursor to end
         self._entrada.icursor(tk.END)
 
     def _set_values_in_input(self, value):
-        """Metódo responsável por captar o valor númerico clicado e setar no input"""
+        """Method responsible for capturing the clicked numeric value and setting it in the input"""
         try:
             current_value = self._entrada.get()
-            cursor_pos = self._entrada.index(tk.INSERT)  # 获取当前光标位置
+            cursor_pos = self._entrada.index(tk.INSERT)  # Get current cursor position
             
-            if current_value == 'Erro':
+            if current_value == 'Error':
                 self._entrada.delete(0, tk.END)
                 self._entrada.insert(0, value)
-                self._entrada.icursor(1)  # 光标移到数字后面
+                self._entrada.icursor(1)  # Move cursor after the number
                 return
 
             if current_value == '0':
                 self._entrada.delete(0, tk.END)
                 self._entrada.insert(0, value)
-                self._entrada.icursor(1)  # 光标移到数字后面
+                self._entrada.icursor(1)  # Move cursor after the number
             elif self._lenght_max(current_value):
-                # 在光标位置插入数字
+                # Insert number at cursor position
                 self._entrada.insert(cursor_pos, value)
-                self._entrada.icursor(cursor_pos + 1)  # 光标移到插入数字后面
+                self._entrada.icursor(cursor_pos + 1)  # Move cursor after inserted number
         except Exception as e:
-            print(f"输入数字时出错: {e}")
+            print(f"Error inputting number: {e}")
     
     def _set_dot_in_input(self, dot):
-        """Metódo responsável por setar o ponto de separação decimal no valor"""
+        """Method responsible for setting the decimal point separator in the value"""
         try:
             current_value = self._entrada.get()
             cursor_pos = self._entrada.index(tk.INSERT)
             
-            if current_value == 'Erro':
+            if current_value == 'Error':
                 return 
 
-            # 检查当前数字段是否已有小数点
+            # Check if current number segment already has a decimal point
             if len(current_value) > 0:
-                # 找到光标位置前后的运算符
+                # Find operators before and after cursor position
                 left_part = current_value[:cursor_pos]
                 right_part = current_value[cursor_pos:]
                 
-                # 找到当前数字段的范围
+                # Find the range of current number segment
                 left_operator_pos = -1
                 for i in range(len(left_part) - 1, -1, -1):
                     if left_part[i] in '+-*/(':
@@ -579,10 +579,10 @@ H: 历史记录按钮
                         right_operator_pos = cursor_pos + i
                         break
                 
-                # 检查当前数字段是否已有小数点
+                # Check if current number segment already has decimal point
                 current_number = current_value[left_operator_pos + 1:right_operator_pos]
                 if '.' in current_number:
-                    return  # 当前数字已有小数点，不添加
+                    return  # Current number already has decimal point, don't add
 
             if (len(current_value) > 0 and 
                 cursor_pos > 0 and
@@ -591,19 +591,19 @@ H: 历史记录按钮
                 self._entrada.insert(cursor_pos, dot)
                 self._entrada.icursor(cursor_pos + 1)
             elif cursor_pos == 0 or current_value[cursor_pos - 1] in '+-*/(':
-                # 在运算符后添加 "0."
+                # Add "0." after operator
                 self._entrada.insert(cursor_pos, '0.')
                 self._entrada.icursor(cursor_pos + 2)
         except Exception as e:
-            print(f"输入小数点时出错: {e}")
+            print(f"Error inputting decimal point: {e}")
 
     def _set_open_parent(self):
-        """Metódo para setar a abertura de parenteses no input"""
+        """Method to set opening parenthesis in input"""
         try:
             current_value = self._entrada.get()
             cursor_pos = self._entrada.index(tk.INSERT)
             
-            if current_value == 'Erro':
+            if current_value == 'Error':
                 self._clear_input()
                 return
 
@@ -617,23 +617,23 @@ H: 历史记录按钮
                 self._entrada.insert(cursor_pos, '(')
                 self._entrada.icursor(cursor_pos + 1)
         except Exception as e:
-            print(f"输入左括号时出错: {e}")
+            print(f"Error inputting left parenthesis: {e}")
     
     def _set_close_parent(self):
-        """Metódo para setar o fechamento de parenteses no input"""
+        """Method to set closing parenthesis in input"""
         try:
             current_value = self._entrada.get()
             cursor_pos = self._entrada.index(tk.INSERT)
             
-            if current_value == 'Erro':
+            if current_value == 'Error':
                 return
 
-            # 检查括号平衡
+            # Check parenthesis balance
             open_count = current_value.count('(')
             close_count = current_value.count(')')
             
             if open_count <= close_count:
-                return  # 已经平衡或关闭括号过多
+                return  # Already balanced or too many closing parentheses
                 
             if (cursor_pos > 0 and 
                 current_value[cursor_pos - 1] not in '+-/*(' and 
@@ -641,24 +641,24 @@ H: 历史记录按钮
                 self._entrada.insert(cursor_pos, ')')
                 self._entrada.icursor(cursor_pos + 1)
         except Exception as e:
-            print(f"输入右括号时出错: {e}")
+            print(f"Error inputting right parenthesis: {e}")
 
     def _clear_input(self):
-        """Reseta o input da calculadora, limpando-o por completo e inserindo o valor 0"""
+        """Reset calculator input, completely clearing it and inserting value 0"""
         try:
             self._entrada.delete(0, tk.END)
             self._entrada.insert(0, 0)
-            self._entrada.icursor(1)  # 光标移到0后面
+            self._entrada.icursor(1)  # Move cursor after 0
         except Exception as e:
-            print(f"清空输入时出错: {e}")
+            print(f"Error clearing input: {e}")
     
     def _del_last_value_in_input(self):
-        """删除光标前面的字符"""
+        """Delete character before cursor"""
         try:
             current_value = self._entrada.get()
             cursor_pos = self._entrada.index(tk.INSERT)
             
-            if current_value == 'Erro':
+            if current_value == 'Error':
                 self._clear_input()
                 return
 
@@ -666,112 +666,112 @@ H: 历史记录按钮
                 self._entrada.delete(cursor_pos - 1)
                 self._entrada.icursor(cursor_pos - 1)
             
-            # 如果删除后为空，设置为0
+            # If empty after deletion, set to 0
             if not self._entrada.get():
                 self._entrada.insert(0, 0)
                 self._entrada.icursor(1)
         except Exception as e:
-            print(f"删除字符时出错: {e}")
+            print(f"Error deleting character: {e}")
     
     def _set_operator_in_input(self, operator):
-        """Metódo responsável por captar o operador matemático clicado e setar no input"""
+        """Method responsible for capturing the clicked mathematical operator and setting it in input"""
         try:
             current_value = self._entrada.get()
             cursor_pos = self._entrada.index(tk.INSERT)
             
-            if current_value == 'Erro':
+            if current_value == 'Error':
                 return
 
             if current_value == '' or current_value == '0':
-                if operator == '-':  # 允许负号作为第一个字符
+                if operator == '-':  # Allow minus sign as first character
                     if current_value == '0':
                         self._entrada.delete(0, tk.END)
                     self._entrada.insert(0, '-')
                     self._entrada.icursor(1)
                 return
                 
-            # 避免连续运算符，但允许负号
+            # Avoid consecutive operators, but allow minus sign
             if cursor_pos > 0:
                 prev_char = current_value[cursor_pos - 1]
                 if prev_char in '+-*/' and operator != '-':
                     return
-                # 如果最后是运算符且当前是负号，只在特定情况下允许
+                # If last is operator and current is minus, only allow in specific cases
                 if prev_char in '+-*/' and operator == '-':
-                    if prev_char == '-':  # 避免连续负号
+                    if prev_char == '-':  # Avoid consecutive minus signs
                         return
                         
             if self._lenght_max(current_value):
                 self._entrada.insert(cursor_pos, operator)
                 self._entrada.icursor(cursor_pos + len(operator))
         except Exception as e:
-            print(f"输入运算符时出错: {e}")
+            print(f"Error inputting operator: {e}")
             
     def _get_data_in_input(self):
-        """Pega os dados com todas as operações contidos dentro do input
-        para realizar o calculo e adiciona ao histórico"""
+        """Get data with all operations contained within input
+        to perform calculation and add to history"""
         try:
             current_value = self._entrada.get()
             
-            if current_value == 'Erro' or not current_value:
+            if current_value == 'Error' or not current_value:
                 return
 
-            # 保存计算表达式
+            # Save calculation expression
             expression = current_value
             self._last_expression = expression
             
             result = self.calc.calculation(expression)
             self._set_result_in_input(result=result)
             
-            # 添加到历史记录 - 添加空值检查
+            # Add to history - add null value check
             if (self.history_manager and 
-                result != 'Erro' and 
+                result != 'Error' and 
                 expression and 
                 expression != '0'):
                 self.history_manager.add_calculation(expression, result)
         except Exception as e:
-            print(f"计算时出错: {e}")
+            print(f"Error during calculation: {e}")
             self._entrada.delete(0, len(self._entrada.get()))
-            self._entrada.insert(0, 'Erro')
+            self._entrada.insert(0, 'Error')
 
     def _set_result_in_input(self, result=0):
-        """Seta o resultado de toda a operação dentro do input"""
+        """Set the result of entire operation within input"""
         try:
             self._entrada.delete(0, len(self._entrada.get()))
             self._entrada.insert(0, result)
-            # 确保光标在结果末尾
+            # Ensure cursor is at end of result
             self._entrada.icursor(tk.END)
         except Exception as e:
-            print(f"设置结果时出错: {e}")
+            print(f"Error setting result: {e}")
 
     def _lenght_max(self, data_in_input):
-        """Para verificar se o input atingiu a quantidade de caracteres máxima"""
+        """To check if input reached maximum character count"""
         try:
-            return len(str(data_in_input)) < 15  # 修改为小于15而不是大于等于15
+            return len(str(data_in_input)) < 15  # Changed to less than 15 instead of greater than or equal to 15
         except:
             return False
             
     def start(self):
-        """启动计算器应用"""
-        print('\33[92mCalculadora Tk Iniciada. . .\33[m\n')
+        """Start calculator application"""
+        print('\33[92mCalculator Tk Started. . .\33[m\n')
         if self.history_manager:
-            print('\33[94m历史记录功能已启用 - 按 H 键或使用菜单查看历史记录\33[m\n')
+            print('\33[94mHistory feature enabled - Press H key or use menu to view history\33[m\n')
         else:
-            print('\33[93m历史记录功能不可用\33[m\n')
-        print('\33[96m新功能: 光标可见 + Enter键计算 + 完整键盘支持\33[m\n')
-        print('\33[95m快捷键: Enter=计算, Backspace=删除, C/Delete/Esc=清空, Ctrl+H=历史\33[m\n')
+            print('\33[93mHistory feature not available\33[m\n')
+        print('\33[96mNew features: Visible cursor + Enter key calculation + Full keyboard support\33[m\n')
+        print('\33[95mShortcuts: Enter=calculate, Backspace=delete, C/Delete/Esc=clear, Ctrl+H=history\33[m\n')
         self.master.mainloop()
     
     def _realod_app(self):
-        """Reinicia o aplicativo."""
+        """Restart the application."""
         try:
-            python = sys.executable  # Recupera o path do executável do python
+            python = sys.executable  # Retrieve python executable path
             os.execl(python, python, *sys.argv)
         except Exception as e:
-            print(f"重启应用失败: {e}")
-            messagebox.showerror("错误", f"重启应用失败: {e}")
+            print(f"Failed to restart application: {e}")
+            messagebox.showerror("Error", f"Failed to restart application: {e}")
 
     def _exit(self):
-        """安全退出应用"""
+        """Safely exit application"""
         try:
             self.master.quit()
             self.master.destroy()
