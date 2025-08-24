@@ -29,6 +29,6 @@ class Calculador(object):
 
         result = str(result)
         if len(result) > 15:
-            result = '{:5.5E}'.format(float(result))
+            result = f'{float(result):5.5E}'
             
         return result
