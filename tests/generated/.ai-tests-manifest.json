@@ -1,5 +1,10 @@
 {
   "tests": {
+    "main.py": {
+      "unit": [
+        "tests/generated/test_main_unit.py"
+      ]
+    },
     "app/calculador.py": {
       "unit": [
         "tests/generated/app/test_calculador_unit.py"
@@ -8,6 +13,11 @@
     "app/calculadora.py": {
       "unit": [
         "tests/generated/app/test_calculadora_unit.py"
+      ]
+    },
+    "app/__init__.py": {
+      "unit": [
+        "tests/generated/app/test___init___unit.py"
       ]
     }
   }
