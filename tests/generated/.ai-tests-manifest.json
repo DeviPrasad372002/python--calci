@@ -1,0 +1,14 @@
+{
+  "tests": {
+    "app/calculador.py": {
+      "unit": [
+        "tests/generated/app/test_calculador_unit.py"
+      ]
+    },
+    "app/calculadora.py": {
+      "unit": [
+        "tests/generated/app/test_calculadora_unit.py"
+      ]
+    }
+  }
+}
